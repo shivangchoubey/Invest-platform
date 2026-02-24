@@ -6,7 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authroutes.js";
 import startupRoutes from "./routes/startuproutes.js";
-import investmentRoutes from "./routes/investmentroutes.js";
+import investmentRoutes from "./routes/investroutes.js";
 connectDB();
 
 const app = express();
@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/startups", startupRoutes);
-app.use("/api/investments", investmentRoutes);
+app.use("/api/invest", investmentRoutes);
 
 app.get("/", (req, res) => {
   res.send("Investment Platform API Running...");

@@ -1,4 +1,4 @@
-import Investment from "../models/investment.js";
+import Investment from "../models/invest.js";
 import Startup from "../models/startup.js";
 
 export const investInStartup = async (req, res) => {
@@ -41,6 +41,20 @@ export const investInStartup = async (req, res) => {
       message: "Investment successful",
       investment,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyInvestments = async (req, res) => {
+  try {
+    const investments = await Investment.find({
+      investor: req.user._id,
+    })
+      .populate("startup", "title fundingGoal amountRaised")
+      .sort({ createdAt: -1 });
+
+    res.json(investments);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
