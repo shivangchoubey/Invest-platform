@@ -32,7 +32,12 @@ export const investInStartup = async (req, res) => {
       startup: startupId,
       amount,
     });
-
+    // Prevent founder investing in own startup
+    if (startup.founder.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        message: "You cannot invest in your own startup",
+      });
+    }
     // Update startup amountRaised
     startup.amountRaised += amount;
     await startup.save();
