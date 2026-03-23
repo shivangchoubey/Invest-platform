@@ -23,7 +23,12 @@ export const getAllStartups = async (req, res) => {
     const startups = await Startup.find()
       .populate("founder", "name email role");
 
-    res.json(startups);
+  const result = startups.map((s) => ({
+  ...s._doc,
+  fundingProgress: ((s.amountRaised / s.fundingGoal) * 100).toFixed(2),
+}));
+
+res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -41,7 +46,6 @@ export const getMyStartups = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 export const getStartupById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -60,7 +64,13 @@ export const getStartupById = async (req, res) => {
     }).populate("investor", "name email");
 
     res.json({
-      startup,
+      startup: {
+        ...startup._doc,
+        fundingProgress: (
+          (startup.amountRaised / startup.fundingGoal) *
+          100
+        ).toFixed(2),
+      },
       investors: investments.map((inv) => ({
         investor: inv.investor,
         amount: inv.amount,
