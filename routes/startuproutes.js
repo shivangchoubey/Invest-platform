@@ -5,6 +5,7 @@ import {
   createStartup,
   getAllStartups,
   getMyStartups,
+  getStartupById
 } from "../controllers/startupcontrollers.js";
 
 const router = express.Router();
@@ -18,8 +19,9 @@ router.get(
   authorizeRoles("FOUNDER"),
   getMyStartups
 );
-
 // Founder-only route
 router.post("/", protect, authorizeRoles("FOUNDER"), createStartup);
+
+router.get("/:id", getStartupById);
 
 export default router;
