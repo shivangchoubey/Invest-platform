@@ -1,5 +1,5 @@
 import Startup from "../models/startup.js";
-import Investment from "../models/invest.js";
+import Investment from "../models/invest.js"; // ✅ FIXED: correct file name
 
 export const createStartup = async (req, res) => {
   try {
@@ -10,6 +10,7 @@ export const createStartup = async (req, res) => {
       description,
       fundingGoal,
       founder: req.user._id,
+      // verificationStatus will default to "PENDING"
     });
 
     res.status(201).json(startup);
@@ -20,19 +21,24 @@ export const createStartup = async (req, res) => {
 
 export const getAllStartups = async (req, res) => {
   try {
-    const startups = await Startup.find()
-      .populate("founder", "name email role");
+    const startups = await Startup.find({
+      verificationStatus: "APPROVED", // ✅ ADDED: only show approved startups
+    }).populate("founder", "name email role");
 
-  const result = startups.map((s) => ({
-  ...s._doc,
-  fundingProgress: ((s.amountRaised / s.fundingGoal) * 100).toFixed(2),
-}));
+    const result = startups.map((s) => ({
+      ...s._doc,
+      fundingProgress: (
+        (s.amountRaised / s.fundingGoal) *
+        100
+      ).toFixed(2),
+    }));
 
-res.json(result);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 export const getMyStartups = async (req, res) => {
   try {
     const startups = await Startup.find({
@@ -41,11 +47,21 @@ export const getMyStartups = async (req, res) => {
       .populate("founder", "name email")
       .sort({ createdAt: -1 });
 
-    res.json(startups);
+    // ✅ OPTIONAL IMPROVEMENT: add fundingProgress here too
+    const result = startups.map((s) => ({
+      ...s._doc,
+      fundingProgress: (
+        (s.amountRaised / s.fundingGoal) *
+        100
+      ).toFixed(2),
+    }));
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 export const getStartupById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -57,6 +73,13 @@ export const getStartupById = async (req, res) => {
 
     if (!startup) {
       return res.status(404).json({ message: "Startup not found" });
+    }
+
+    // ✅ ADDED: block access if not approved
+    if (startup.verificationStatus !== "APPROVED") {
+      return res.status(403).json({
+        message: "Startup not approved yet",
+      });
     }
 
     const investments = await Investment.find({
