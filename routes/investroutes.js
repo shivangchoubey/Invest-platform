@@ -2,7 +2,7 @@ import express from "express";
 import protect from "../middlewares/authmiddlewares.js";
 import authorizeRoles from "../middlewares/authorize.js";
 import { investInStartup, getMyInvestments } from "../controllers/investmentcontroller.js";
-import { investmentSchema } from "../validations/investmentValidation.js";
+import { investmentSchema } from "../validations/investmentValidations.js";
 import validate from "../middlewares/validate.js";
 
 const router = express.Router();
