@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["FOUNDER", "INVESTOR"],
+      enum: ["FOUNDER", "INVESTOR","ADMIN"],
       required: true,
     },
     verificationStatus: {
