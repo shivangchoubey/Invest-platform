@@ -21,19 +21,52 @@ export const createStartup = async (req, res) => {
 
 export const getAllStartups = async (req, res) => {
   try {
+    // 🔹 query params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const sortBy = req.query.sortBy || "createdAt"; // optional
+    const order = req.query.order === "asc" ? 1 : -1;
+
+    const skip = (page - 1) * limit;
+
+    // 🔹 total count for pagination
+    const total = await Startup.countDocuments({
+      verificationStatus: "APPROVED",
+    });
+
+    // 🔹 fetch startups
     const startups = await Startup.find({
-      verificationStatus: "APPROVED", // ✅ ADDED: only show approved startups
-    }).populate("founder", "name email role");
+      verificationStatus: "APPROVED",
+    })
+      .populate("founder", "name email role")
+      .sort({ [sortBy]: order })
+      .skip(skip)
+      .limit(limit);
 
-    const result = startups.map((s) => ({
-      ...s._doc,
-      fundingProgress: (
-        (s.amountRaised / s.fundingGoal) *
-        100
-      ).toFixed(2),
-    }));
+    // 🔹 get investor count for each startup
+    const result = await Promise.all(
+      startups.map(async (s) => {
+        const investorCount = await Investment.countDocuments({
+          startup: s._id,
+        });
 
-    res.json(result);
+        return {
+          ...s._doc,
+          fundingProgress: (
+            (s.amountRaised / s.fundingGoal) *
+            100
+          ).toFixed(2),
+          investorCount, // 🔥 NEW
+        };
+      })
+    );
+
+    res.json({
+      page,
+      totalPages: Math.ceil(total / limit),
+      total,
+      data: result,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
