@@ -1,8 +1,34 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post("/auth/login", formData);
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      navigate("/home");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center font-sans tracking-tight px-4">
@@ -39,11 +65,17 @@ const Login = () => {
           <h2 className="text-[22px] font-bold text-secondary mb-1">
             Welcome back
           </h2>
-          <p className="text-[14px] text-muted mb-8 font-medium">
+          <p className="text-[14px] text-muted mb-6 font-medium">
             Please enter your credentials to access your ledger.
           </p>
 
-          <form className="space-y-6">
+          {error && (
+            <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-4">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
 
             {/* Email Address */}
             <div className="flex flex-col">
@@ -57,7 +89,11 @@ const Login = () => {
                 </div>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="name@company.com"
+                  required
                   className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-input text-secondary border-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-gray-400 font-medium text-[15px]"
                 />
               </div>
@@ -80,7 +116,11 @@ const Login = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder="••••••••"
+                  required
                   className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-input text-secondary border-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-lg tracking-widest placeholder:tracking-widest"
                 />
                 <button
@@ -107,12 +147,18 @@ const Login = () => {
 
             {/* Button */}
             <div className="pt-4">
-              <button type="submit" className="w-full bg-primary text-white py-4 rounded-full font-bold text-[15px] hover:opacity-95 transition-all flex items-center justify-center gap-2">
-                Sign In
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14"></path>
-                  <path d="m12 5 7 7-7 7"></path>
-                </svg>
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full bg-primary text-white py-4 rounded-full font-bold text-[15px] hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isLoading ? "Signing In..." : "Sign In"}
+                {!isLoading && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                )}
               </button>
             </div>
 
