@@ -141,7 +141,7 @@ const Home = () => {
         {/* Startups Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {startups.map((startup) => (
-            <div key={startup.id} className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <Link to={`/startup/${startup.id}`} key={startup.id} className="block bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300">
               
               {/* Card Image area */}
               <div className="relative h-56 w-full">
@@ -201,7 +201,7 @@ const Home = () => {
                 </div>
 
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
