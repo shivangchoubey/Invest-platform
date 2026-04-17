@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../services/api";
+import { formatCurrency } from "../utils/formatters";
 
 const StartupDetails = () => {
   const { id } = useParams();
@@ -110,7 +111,7 @@ const StartupDetails = () => {
                     Total Amount Raised
                   </p>
                   <p className="text-3xl font-extrabold text-primary">
-                    ₹{(startup.amountRaised / 10000000).toFixed(2)} Cr
+                    {formatCurrency(startup.amountRaised)}
                   </p>
                 </div>
                 <div className="text-right">
@@ -118,7 +119,7 @@ const StartupDetails = () => {
                     Funding Goal
                   </p>
                   <p className="text-2xl font-bold text-[#222]">
-                    ₹{(startup.fundingGoal / 10000000).toFixed(2)} Cr
+                    {formatCurrency(startup.fundingGoal)}
                   </p>
                 </div>
               </div>
@@ -185,7 +186,7 @@ const StartupDetails = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-[15px] font-extrabold text-[#222]">
-                          ₹{(inv.amount / 100000).toFixed(2)} L
+                          {formatCurrency(inv.amount)}
                         </p>
                         <p className="text-[12px] font-semibold text-gray-400 mt-0.5">
                           {date}
@@ -229,8 +230,8 @@ const StartupDetails = () => {
             <div className="w-full bg-[#111] rounded-3xl overflow-hidden aspect-square shadow-2xl relative mb-6 border border-gray-200/20">
               {/* Fallback image if generator fails, we will ideally use the generated one and replace */}
               <img 
-                src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800" 
-                alt="Vera Green Render" 
+                src={startup.image || "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800"} 
+                alt={startup.title || "Vera Green Render"} 
                 className="w-full h-full object-cover opacity-90 scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>

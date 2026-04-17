@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { formatCurrency } from "../utils/formatters";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -129,7 +130,7 @@ const Home = () => {
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-xl font-bold text-primary">{startup.fundingProgress || 0}%</span>
                       <span className="text-[12px] font-bold text-gray-400">
-                        ₹{(startup.amountRaised / 10000000).toFixed(2)} Cr <span className="font-medium text-gray-400">/ ₹{(startup.fundingGoal / 10000000).toFixed(2)} Cr</span>
+                        {formatCurrency(startup.amountRaised)} <span className="font-medium text-gray-400">/ {formatCurrency(startup.fundingGoal)}</span>
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
