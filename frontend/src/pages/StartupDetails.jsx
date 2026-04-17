@@ -1,43 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
+import api from "../services/api";
 
 const StartupDetails = () => {
   const { id } = useParams();
+  const [startupData, setStartupData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data mirroring the design exactly
-  const mockDetails = {
-    titlePrefix: "Vera Green",
-    titleSuffix: "Biotechnology",
-    description:
-      "Engineering the next generation of carbon-neutral construction materials using synthetic mycelium architecture. Vera Green is reshaping the urban landscape with regenerative biological manufacturing that turns cities into carbon sinks.",
-    raised: "₹1.84 Cr",
-    goal: "₹2.50 Cr",
-    progress: ((1.84 / 2.5) * 100).toFixed(1), // ~73.6%
-    daysRemaining: 24,
-    investors: [
-      {
-        initials: "AL",
-        name: "Artemis Ventures",
-        type: "INSTITUTIONAL",
-        amount: "₹5.0 Cr",
-        date: "March 2024",
-      },
-      {
-        initials: "SC",
-        name: "Sarah Chen",
-        type: "ANGEL INVESTOR",
-        amount: "₹2.5 Cr",
-        date: "April 2024",
-      },
-      {
-        initials: "MK",
-        name: "Marcus Kael",
-        type: "STRATEGIC PARTNER",
-        amount: "₹1.0 Cr",
-        date: "May 2024",
-      },
-    ],
-  };
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        const res = await api.get(`/startups/${id}`);
+        setStartupData(res.data);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message || "Failed to fetch details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error || !startupData) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="text-red-500 font-bold text-xl">{error || "Startup not found"}</div>
+      </div>
+    );
+  }
+
+  const { startup, investors } = startupData;
+  const titleParts = startup.title ? startup.title.split(" ") : ["Startup", ""];
+  const titlePrefix = titleParts[0];
+  const titleSuffix = titleParts.slice(1).join(" ");
+  const progressPercent = Math.min(startup.fundingProgress || 0, 100);
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans text-secondary pb-24">
@@ -89,11 +94,11 @@ const StartupDetails = () => {
                 FEATURED STARTUP
               </span>
               <h1 className="text-5xl font-extrabold tracking-tight mb-2 text-[#222222]">
-                {mockDetails.titlePrefix} <br className="hidden md:block" />
-                <span className="text-primary">{mockDetails.titleSuffix}</span>
+                {titlePrefix} <br className="hidden md:block" />
+                <span className="text-primary">{titleSuffix}</span>
               </h1>
               <p className="mt-6 text-[15px] font-medium text-gray-500 leading-relaxed max-w-2xl">
-                {mockDetails.description}
+                {startup.description}
               </p>
             </div>
 
@@ -105,7 +110,7 @@ const StartupDetails = () => {
                     Total Amount Raised
                   </p>
                   <p className="text-3xl font-extrabold text-primary">
-                    {mockDetails.raised}
+                    ₹{(startup.amountRaised / 10000000).toFixed(2)} Cr
                   </p>
                 </div>
                 <div className="text-right">
@@ -113,7 +118,7 @@ const StartupDetails = () => {
                     Funding Goal
                   </p>
                   <p className="text-2xl font-bold text-[#222]">
-                    {mockDetails.goal}
+                    ₹{(startup.fundingGoal / 10000000).toFixed(2)} Cr
                   </p>
                 </div>
               </div>
@@ -122,16 +127,17 @@ const StartupDetails = () => {
               <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden my-4 relative">
                 <div
                   className="h-full bg-primary rounded-full absolute left-0 top-0"
-                  style={{ width: `${mockDetails.progress}%` }}
+                  style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
 
               <div className="flex justify-between items-center mt-2">
                 <span className="text-[13px] font-bold text-primary">
-                  {mockDetails.progress}% Completed
+                  {startup.fundingProgress || 0}% Completed
                 </span>
                 <span className="text-[13px] font-bold text-gray-500">
-                  {mockDetails.daysRemaining} Days Remaining
+                  {/* Mock days remaining since backend doesnt have end date */}
+                  24 Days Remaining
                 </span>
               </div>
             </div>
@@ -151,35 +157,43 @@ const StartupDetails = () => {
               </div>
 
               <div className="bg-[#F8F9FA] rounded-3xl p-6 space-y-4 border border-gray-100/50">
-                {mockDetails.investors.map((investor, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between bg-white p-5 rounded-2xl shadow-sm border border-gray-50"
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Avatar Circle */}
-                      <div className="w-12 h-12 rounded-full bg-[#E8F3EE] text-primary flex items-center justify-center font-bold text-sm">
-                        {investor.initials}
+                {investors.length === 0 ? (
+                  <p className="text-center text-gray-500 font-semibold py-4">No investors yet.</p>
+                ) : investors.map((inv, idx) => {
+                  const investorName = inv.investor ? inv.investor.name : "Anonymous";
+                  const initials = investorName.substring(0, 2).toUpperCase();
+                  const date = new Date(inv.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long' });
+
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between bg-white p-5 rounded-2xl shadow-sm border border-gray-50"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Avatar Circle */}
+                        <div className="w-12 h-12 rounded-full bg-[#E8F3EE] text-primary flex items-center justify-center font-bold text-sm">
+                          {initials}
+                        </div>
+                        <div>
+                          <p className="text-[15px] font-bold text-[#222]">
+                            {investorName}
+                          </p>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
+                            INVESTOR
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[15px] font-bold text-[#222]">
-                          {investor.name}
+                      <div className="text-right">
+                        <p className="text-[15px] font-extrabold text-[#222]">
+                          ₹{(inv.amount / 100000).toFixed(2)} L
                         </p>
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
-                          {investor.type}
+                        <p className="text-[12px] font-semibold text-gray-400 mt-0.5">
+                          {date}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[15px] font-extrabold text-[#222]">
-                        {investor.amount}
-                      </p>
-                      <p className="text-[12px] font-semibold text-gray-400 mt-0.5">
-                        {investor.date}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -244,7 +258,7 @@ const StartupDetails = () => {
                      <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600"></div>
                    </div>
                    <div>
-                     <p className="text-[14px] font-bold text-[#222] leading-tight">Elena Rossi</p>
+                     <p className="text-[14px] font-bold text-[#222] leading-tight">{startup.founder?.name || "Founder"}</p>
                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">Founder</p>
                    </div>
                 </div>
@@ -258,7 +272,7 @@ const StartupDetails = () => {
               {/* Chat bubbles */}
               <div className="flex-1 flex flex-col gap-5 overflow-y-auto w-full no-scrollbar pr-2 mb-4">
                 <div className="flex flex-col items-start gap-1">
-                  <span className="text-[10px] font-semibold text-gray-400 ml-3">Elena Rossi</span>
+                  <span className="text-[10px] font-semibold text-gray-400 ml-3">{startup.founder?.name || "Founder"}</span>
                   <div className="bg-white px-5 py-4 rounded-2xl rounded-tl-sm text-[13px] font-medium text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-50 max-w-[90%] leading-relaxed">
                     Welcome to our ledger room. I'm available for any specific questions regarding our patent portfolio.
                   </div>
