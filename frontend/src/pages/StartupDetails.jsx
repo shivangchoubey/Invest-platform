@@ -8,18 +8,30 @@ const StartupDetails = () => {
   const [startupData, setStartupData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isEditImageModalOpen, setIsEditImageModalOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [updatingImage, setUpdatingImage] = useState(false);
+  const [updateImageError, setUpdateImageError] = useState(null);
+
+  const [isCommitModalOpen, setIsCommitModalOpen] = useState(false);
+  const [commitAmount, setCommitAmount] = useState("");
+  const [committing, setCommitting] = useState(false);
+  const [commitError, setCommitError] = useState(null);
+
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  const fetchDetails = async () => {
+    try {
+      const res = await api.get(`/startups/${id}`);
+      setStartupData(res.data);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to fetch details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const res = await api.get(`/startups/${id}`);
-        setStartupData(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || err.message || "Failed to fetch details");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetails();
   }, [id]);
 
@@ -44,6 +56,48 @@ const StartupDetails = () => {
   const titlePrefix = titleParts[0];
   const titleSuffix = titleParts.slice(1).join(" ");
   const progressPercent = Math.min(startup.fundingProgress || 0, 100);
+  
+  const isFounder = user && user.role === "FOUNDER" && startup.founder?._id === user._id;
+  const isInvestor = user && user.role === "INVESTOR";
+
+  const handleUpdateImage = async (e) => {
+    e.preventDefault();
+    setUpdatingImage(true);
+    setUpdateImageError(null);
+    try {
+      await api.put(`/startups/${id}/image`, { image: newImageUrl });
+      setStartupData(prev => ({
+        ...prev,
+        startup: { ...prev.startup, image: newImageUrl }
+      }));
+      setIsEditImageModalOpen(false);
+      setNewImageUrl("");
+    } catch (err) {
+      setUpdateImageError(err.response?.data?.message || "Failed to update image");
+    } finally {
+      setUpdatingImage(false);
+    }
+  };
+
+  const handleCommitFunds = async (e) => {
+    e.preventDefault();
+    setCommitting(true);
+    setCommitError(null);
+    try {
+      await api.post("/invest", {
+        startupId: id,
+        amount: Number(commitAmount)
+      });
+      // Refresh the page data
+      await fetchDetails();
+      setIsCommitModalOpen(false);
+      setCommitAmount("");
+    } catch (err) {
+      setCommitError(err.response?.data?.message || "Failed to commit funds");
+    } finally {
+      setCommitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans text-secondary pb-24">
@@ -203,22 +257,8 @@ const StartupDetails = () => {
               <h3 className="text-xl font-bold text-[#222] mb-6">
                 The Opportunity
               </h3>
-              <div className="space-y-6 text-[15px] font-medium text-gray-500 leading-relaxed text-justify">
-                <p>
-                  Vera Green has developed a proprietary biological synthesis
-                  process that binds agricultural byproducts into structural
-                  composites. Our <strong className="text-[#333]">MycoShell™</strong> technology offers compressive
-                  strength comparable to concrete while maintaining the insulation
-                  properties of high-end industrial foam.
-                </p>
-                <p>
-                  Currently operating out of our pilot facility in Berlin, we
-                  are raising funds to scale production to industrial levels and
-                  fulfill existing letters of intent from three major European
-                  developers. This bridge round will facilitate the automation
-                  of our bioreactors and the certification of our first
-                  load-bearing products.
-                </p>
+              <div className="space-y-6 text-[15px] font-medium text-gray-500 leading-relaxed text-justify whitespace-pre-wrap">
+                {startup.opportunity || startup.description}
               </div>
             </div>
           </div>
@@ -227,7 +267,7 @@ const StartupDetails = () => {
           <div className="w-full lg:w-[400px] flex-shrink-0 flex flex-col pt-4">
             
             {/* The Black Visual Image Block */}
-            <div className="w-full bg-[#111] rounded-3xl overflow-hidden aspect-square shadow-2xl relative mb-6 border border-gray-200/20">
+            <div className="w-full bg-[#111] rounded-3xl overflow-hidden aspect-square shadow-2xl relative mb-6 border border-gray-200/20 group">
               {/* Fallback image if generator fails, we will ideally use the generated one and replace */}
               <img 
                 src={startup.image || "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800"} 
@@ -235,13 +275,40 @@ const StartupDetails = () => {
                 className="w-full h-full object-cover opacity-90 scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+              
+              {isFounder && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button 
+                    onClick={() => {
+                      setNewImageUrl(startup.image || "");
+                      setIsEditImageModalOpen(true);
+                    }}
+                    className="bg-white/20 backdrop-blur-md text-white border border-white/40 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/30 transition shadow-lg"
+                  >
+                    Edit Photo
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
             <div className="flex gap-3 mb-10 w-full">
-              <button className="flex-1 bg-primary text-white py-4 rounded-2xl font-bold text-[16px] hover:opacity-95 transition-opacity shadow-[0_8px_20px_rgba(31,122,99,0.2)]">
-                Commit Funds
-              </button>
+              {isInvestor ? (
+                <button 
+                  onClick={() => setIsCommitModalOpen(true)}
+                  className="flex-1 bg-primary text-white py-4 rounded-2xl font-bold text-[16px] hover:opacity-95 transition-opacity shadow-[0_8px_20px_rgba(31,122,99,0.2)]"
+                >
+                  Commit Funds
+                </button>
+              ) : (
+                <button 
+                  disabled
+                  title="Only verified investors can commit funds"
+                  className="flex-1 bg-gray-200 text-gray-400 py-4 rounded-2xl font-bold text-[16px] cursor-not-allowed"
+                >
+                  Commit Funds
+                </button>
+              )}
               <button className="w-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 hover:text-primary transition-colors hover:border-primary/30">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
@@ -310,6 +377,124 @@ const StartupDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Image Modal */}
+      {isEditImageModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden transform transition-all">
+            <div className="p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-secondary">Update Venture Photo</h2>
+                <button 
+                  onClick={() => setIsEditImageModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateImage} className="space-y-5">
+                {updateImageError && (
+                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                    {updateImageError}
+                  </div>
+                )}
+                
+                <div>
+                  <label htmlFor="imageUrl" className="block text-sm font-semibold text-secondary mb-2">New Image URL</label>
+                  <input
+                    type="url"
+                    id="imageUrl"
+                    required
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+                  />
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditImageModalOpen(false)}
+                    className="px-6 py-2.5 rounded-full text-sm font-bold text-gray-500 hover:bg-gray-100 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updatingImage}
+                    className="px-6 py-2.5 rounded-full text-sm font-bold text-white bg-primary hover:bg-primary/90 transition shadow disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {updatingImage ? "Updating..." : "Save Photo"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Commit Funds Modal */}
+      {isCommitModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden transform transition-all">
+            <div className="p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-secondary">Commit Funds</h2>
+                <button 
+                  onClick={() => setIsCommitModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleCommitFunds} className="space-y-5">
+                {commitError && (
+                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                    {commitError}
+                  </div>
+                )}
+                
+                <div>
+                  <label htmlFor="amount" className="block text-sm font-semibold text-secondary mb-2">Investment Amount (INR)</label>
+                  <input
+                    type="number"
+                    id="amount"
+                    required
+                    min="1"
+                    max={startup.fundingGoal - startup.amountRaised}
+                    value={commitAmount}
+                    onChange={(e) => setCommitAmount(e.target.value)}
+                    placeholder="e.g. 50000"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+                  />
+                  <p className="text-xs text-gray-500 mt-2 font-medium">
+                    Maximum remaining: {formatCurrency(startup.fundingGoal - startup.amountRaised)}
+                  </p>
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsCommitModalOpen(false)}
+                    className="px-6 py-2.5 rounded-full text-sm font-bold text-gray-500 hover:bg-gray-100 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={committing || !commitAmount}
+                    className="px-6 py-2.5 rounded-full text-sm font-bold text-white bg-primary hover:bg-primary/90 transition shadow disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {committing ? "Processing..." : "Confirm Investment"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -76,15 +76,28 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-semibold text-secondary mb-2">Description</label>
+              <label htmlFor="description" className="block text-sm font-semibold text-secondary mb-2">Short Description</label>
               <textarea
                 id="description"
                 name="description"
                 required
-                rows="4"
+                rows="2"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Describe your venture's mission, product, and market opportunity..."
+                placeholder="A brief summary of your venture..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition resize-none"
+              ></textarea>
+            </div>
+
+            <div>
+              <label htmlFor="opportunity" className="block text-sm font-semibold text-secondary mb-2">The Opportunity (Detailed Description)</label>
+              <textarea
+                id="opportunity"
+                name="opportunity"
+                rows="5"
+                value={formData.opportunity || ""}
+                onChange={handleChange}
+                placeholder="Describe your venture's mission, product, and market opportunity in detail..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition resize-none"
               ></textarea>
             </div>

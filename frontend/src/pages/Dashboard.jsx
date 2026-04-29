@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import FounderDashboard from "../components/FounderDashboard";
 import InvestorDashboard from "../components/InvestorDashboard";
+import AdminDashboard from "../components/AdminDashboard";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -62,6 +63,8 @@ const Dashboard = () => {
           <FounderDashboard user={user} />
         ) : user.role === "INVESTOR" ? (
           <InvestorDashboard user={user} />
+        ) : user.role === "ADMIN" ? (
+          <AdminDashboard user={user} />
         ) : (
           <div className="text-center font-bold font-xl text-red-500 mt-20">No dashboard assigned.</div>
         )}

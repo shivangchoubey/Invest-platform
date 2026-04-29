@@ -104,17 +104,34 @@ const InvestorDashboard = ({ user }) => {
             )}
 
             {/* Capital Allocation Card */}
-            <div className="bg-primary rounded-2xl p-8 text-white flex flex-col justify-between shadow-lg shadow-primary/20 relative overflow-hidden">
+            <div className="bg-primary rounded-2xl p-8 text-white flex flex-col shadow-lg shadow-primary/20 relative overflow-hidden">
                {/* Pattern overlay */}
                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl"></div>
-               <div>
-                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center mb-6">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a8 8 0 0 1-5 7.59l-9.74-15.75L5 21V10"/></svg>
+               <div className="relative z-10">
+                 <div className="flex items-center gap-3 mb-6">
+                   <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a8 8 0 0 1-5 7.59l-9.74-15.75L5 21V10"/></svg>
+                   </div>
+                   <h3 className="text-xl font-bold">Capital Allocation</h3>
                  </div>
-                 <h3 className="text-xl font-bold mb-3">Capital Allocation</h3>
-                 <p className="text-white/70 text-[13px] leading-relaxed">
-                   Detailed breakdown of your venture capital deployments and ledger entries.
-                 </p>
+                 
+                 <div className="mt-4 space-y-4">
+                   {investments.length > 0 ? (
+                     [...investments].sort((a,b) => b.amount - a.amount).slice(0, 3).map((inv) => (
+                       <div key={inv._id} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10">
+                         <span className="text-white font-medium text-sm truncate max-w-[120px]">{inv.startup?.title || "Unknown"}</span>
+                         <div className="flex items-center gap-3">
+                           <span className="text-white font-bold text-sm">{formatCurrency(inv.amount)}</span>
+                           <span className="text-[#E5C158] font-black text-xs w-9 text-right bg-[#E5C158]/20 px-1.5 py-0.5 rounded">
+                             {Math.round((inv.amount / totalCommitted) * 100)}%
+                           </span>
+                         </div>
+                       </div>
+                     ))
+                   ) : (
+                     <p className="text-white/70 text-[13px] leading-relaxed">No capital deployed yet.</p>
+                   )}
+                 </div>
                </div>
             </div>
 
