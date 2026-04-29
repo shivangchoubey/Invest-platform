@@ -90,10 +90,18 @@ const FounderDashboard = ({ user }) => {
                 <div className="relative h-48 w-full bg-secondary">
                   <img src={startup.image || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800"} alt="Venture" className="w-full h-full object-cover opacity-80" />
                   
-                  {/* Status Badge */}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-[9px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 uppercase tracking-wider text-gray-700 shadow-sm border border-gray-100">
-                    <span className={`w-2 h-2 rounded-full ${isApproved ? "bg-green-500" : isPending ? "bg-amber-500" : "bg-red-500"}`}></span>
-                    {startup.verificationStatus}
+                  {/* Badges container */}
+                  <div className="absolute top-4 w-full px-4 flex justify-between items-center">
+                    {/* Industry Type Badge */}
+                    <div className="bg-[#FFC107] text-[#5C4D04] text-[9px] font-bold px-2.5 py-1 rounded shadow-sm uppercase">
+                      {startup.industryType || 'TECH'}
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="bg-white/90 backdrop-blur text-[9px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 uppercase tracking-wider text-gray-700 shadow-sm border border-gray-100">
+                      <span className={`w-2 h-2 rounded-full ${isApproved ? "bg-green-500" : isPending ? "bg-amber-500" : "bg-red-500"}`}></span>
+                      {startup.verificationStatus}
+                    </div>
                   </div>
                 </div>
 

@@ -5,6 +5,8 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    opportunity: "",
+    industryType: "TECH",
     fundingGoal: "",
     image: ""
   });
@@ -27,7 +29,7 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
         ...formData,
         fundingGoal: Number(formData.fundingGoal)
       });
-      setFormData({ title: "", description: "", fundingGoal: "", image: "" });
+      setFormData({ title: "", description: "", opportunity: "", industryType: "TECH", fundingGoal: "", image: "" });
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to register venture. Please try again.");
@@ -38,8 +40,8 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all">
-        <div className="p-6 md:p-8">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all h-[90vh] flex flex-col">
+        <div className="p-6 md:p-8 flex-1 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-secondary">Register New Venture</h2>
             <button 
@@ -54,7 +56,7 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
             Provide the details for your new venture. Once submitted, it will be reviewed for approval before it becomes visible to investors.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5 pb-4">
             {error && (
               <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
                 {error}
@@ -100,6 +102,27 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
                 placeholder="Describe your venture's mission, product, and market opportunity in detail..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition resize-none"
               ></textarea>
+            </div>
+
+            <div>
+              <label htmlFor="industryType" className="block text-sm font-semibold text-secondary mb-2">Industry Type</label>
+              <select
+                id="industryType"
+                name="industryType"
+                value={formData.industryType}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition bg-white"
+              >
+                <option value="TECH">Technology (General)</option>
+                <option value="SAAS">SaaS (Software as a Service)</option>
+                <option value="GREENTECH">Greentech & Sustainability</option>
+                <option value="FINTECH">FinTech</option>
+                <option value="HEALTH">HealthTech</option>
+                <option value="WEALTH">Wealth Management</option>
+                <option value="FMCG">FMCG</option>
+                <option value="AI">AI</option>
+                <option value="EDTECH">EduTech</option>
+              </select>
             </div>
 
             <div>

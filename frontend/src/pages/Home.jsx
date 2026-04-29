@@ -106,10 +106,10 @@ const Home = () => {
                 <div className="relative h-56 w-full">
                   <img src={startup.image || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800"} alt={startup.title} className="w-full h-full object-cover" />
                   
-                  {/* Optional Badge */}
-                  {startup.badge && (
-                    <div className="absolute top-4 left-4 bg-[#FFC107] text-[#5C4D04] text-[10px] font-bold px-2.5 py-1 rounded shadow-sm">
-                      {startup.badge}
+                  {/* Industry Type Badge */}
+                  {startup.industryType && (
+                    <div className="absolute top-4 left-4 bg-[#FFC107] text-[#5C4D04] text-[10px] font-bold px-2.5 py-1 rounded shadow-sm uppercase">
+                      {startup.industryType}
                     </div>
                   )}
 

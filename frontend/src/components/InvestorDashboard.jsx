@@ -158,7 +158,7 @@ const InvestorDashboard = ({ user }) => {
                      <span className="text-white font-bold text-xs">{inv.startup?.title?.substring(0, 2).toUpperCase()}</span>
                    </div>
                    <div className="bg-[#fff8eb] text-[#e5a03b] text-[8px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                     {['SAAS', 'GREENTECH', 'FINTECH', 'HEALTH', 'WEALTH'][idx % 5] || 'TECH'}
+                     {inv.startup?.industryType || 'TECH'}
                    </div>
                 </div>
 
