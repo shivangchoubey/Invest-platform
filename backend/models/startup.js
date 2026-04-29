@@ -26,6 +26,11 @@ const startupSchema = new mongoose.Schema(
     opportunity: {
       type: String,
     },
+    industryType: {
+      type: String,
+      enum: ['SAAS', 'GREENTECH', 'FINTECH', 'HEALTH', 'WEALTH', 'TECH', 'FMCG', 'AI', 'EDTECH'],
+      default: 'TECH'
+    },
     image: {
       type: String,
     },

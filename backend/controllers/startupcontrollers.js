@@ -3,12 +3,13 @@ import Investment from "../models/invest.js"; // ✅ FIXED: correct file name
 
 export const createStartup = async (req, res) => {
   try {
-    const { title, description, opportunity, fundingGoal, image } = req.body;
+    const { title, description, opportunity, industryType, fundingGoal, image } = req.body;
 
     const startup = await Startup.create({
       title,
       description,
       opportunity,
+      industryType: industryType || "TECH",
       fundingGoal,
       image: image || undefined,
       founder: req.user._id,

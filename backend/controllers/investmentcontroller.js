@@ -56,7 +56,7 @@ export const getMyInvestments = async (req, res) => {
     const investments = await Investment.find({
       investor: req.user._id,
     })
-      .populate("startup", "title fundingGoal amountRaised")
+      .populate("startup", "title fundingGoal amountRaised industryType")
       .sort({ createdAt: -1 });
 
     res.json(investments);
