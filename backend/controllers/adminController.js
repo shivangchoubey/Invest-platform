@@ -1,5 +1,14 @@
 import Startup from "../models/startup.js";
 
+export const getPendingStartups = async (req, res) => {
+  try {
+    const pendingStartups = await Startup.find({ verificationStatus: "PENDING" }).sort({ createdAt: -1 });
+    res.json(pendingStartups);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const approveStartup = async (req, res) => {
   try {
     const { id } = req.params;

@@ -32,7 +32,7 @@ export const registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
+      token: generateToken(user._id, user.role),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -59,7 +59,7 @@ export const loginUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
+      token: generateToken(user._id, user.role),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

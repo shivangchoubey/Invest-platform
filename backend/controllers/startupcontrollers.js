@@ -3,12 +3,14 @@ import Investment from "../models/invest.js"; // ✅ FIXED: correct file name
 
 export const createStartup = async (req, res) => {
   try {
-    const { title, description, fundingGoal } = req.body;
+    const { title, description, opportunity, fundingGoal, image } = req.body;
 
     const startup = await Startup.create({
       title,
       description,
+      opportunity,
       fundingGoal,
+      image: image || undefined,
       founder: req.user._id,
       // verificationStatus will default to "PENDING"
     });
@@ -80,14 +82,22 @@ export const getMyStartups = async (req, res) => {
       .populate("founder", "name email")
       .sort({ createdAt: -1 });
 
-    // ✅ OPTIONAL IMPROVEMENT: add fundingProgress here too
-    const result = startups.map((s) => ({
-      ...s._doc,
-      fundingProgress: (
-        (s.amountRaised / s.fundingGoal) *
-        100
-      ).toFixed(2),
-    }));
+    const result = await Promise.all(
+      startups.map(async (s) => {
+        const investorCount = await Investment.countDocuments({
+          startup: s._id,
+        });
+
+        return {
+          ...s._doc,
+          fundingProgress: (
+            (s.amountRaised / s.fundingGoal) *
+            100
+          ).toFixed(2),
+          investorCount,
+        };
+      })
+    );
 
     res.json(result);
   } catch (error) {
@@ -133,6 +143,30 @@ export const getStartupById = async (req, res) => {
         date: inv.createdAt,
       })),
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateStartupImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { image } = req.body;
+
+    const startup = await Startup.findById(id);
+
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    if (startup.founder.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to update this startup" });
+    }
+
+    startup.image = image || undefined;
+    await startup.save();
+
+    res.json(startup);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

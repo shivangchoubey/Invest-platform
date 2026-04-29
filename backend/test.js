@@ -1,0 +1,1 @@
+import dotenv from 'dotenv'; dotenv.config(); import connectDB from './config/db.js'; import Startup from './models/startup.js'; import User from './models/User.js'; connectDB().then(async () => { const s = await Startup.findOne(); console.log(s); process.exit(); });

@@ -4,9 +4,17 @@ import authorizeRoles from "../middlewares/authorize.js";
 import {
   approveStartup,
   rejectStartup,
+  getPendingStartups,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
+
+router.get(
+  "/pending",
+  protect,
+  authorizeRoles("ADMIN"),
+  getPendingStartups
+);
 
 router.put(
   "/approve/:id",

@@ -23,6 +23,12 @@ const startupSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    opportunity: {
+      type: String,
+    },
+    image: {
+      type: String,
+    },
     verificationStatus:{
       type:String,
       enum:["PENDING","APPROVED","REJECTED"],
