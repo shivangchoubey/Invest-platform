@@ -7,7 +7,10 @@ import {
   getAllStartups,
   getMyStartups,
   getStartupById,
-  updateStartupImage
+  updateStartupImage,
+  flagStartup,
+  removeStartup,
+  raiseAgain
 } from "../controllers/startupcontrollers.js";
 import validate from "../middlewares/validate.js";
 import { updateImageSchema } from "../validations/startupValidations.js";
@@ -34,6 +37,27 @@ router.put(
   authorizeRoles("FOUNDER"),
   validate(updateImageSchema),
   updateStartupImage
+);
+
+router.post(
+  "/:id/flag",
+  protect,
+  authorizeRoles("INVESTOR"),
+  flagStartup
+);
+
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("FOUNDER"),
+  removeStartup
+);
+
+router.put(
+  "/:id/raise-again",
+  protect,
+  authorizeRoles("FOUNDER"),
+  raiseAgain
 );
 
 export default router;

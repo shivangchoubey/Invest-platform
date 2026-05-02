@@ -172,3 +172,73 @@ export const updateStartupImage = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const flagStartup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const startup = await Startup.findById(id);
+
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    startup.flags.push({
+      investor: req.user._id,
+      reason,
+    });
+
+    await startup.save();
+
+    res.json({ message: "Startup flagged successfully", startup });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeStartup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const startup = await Startup.findById(id);
+
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    if (startup.founder.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    startup.verificationStatus = "REMOVED";
+    await startup.save();
+
+    res.json({ message: "Startup removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const raiseAgain = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fundingGoal } = req.body;
+
+    const startup = await Startup.findById(id);
+
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    if (startup.founder.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    startup.fundingGoal = fundingGoal;
+    await startup.save();
+
+    res.json({ message: "Funding goal updated successfully", startup });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

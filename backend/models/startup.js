@@ -36,9 +36,24 @@ const startupSchema = new mongoose.Schema(
     },
     verificationStatus:{
       type:String,
-      enum:["PENDING","APPROVED","REJECTED"],
+      enum:["PENDING","APPROVED","REJECTED", "REMOVED"],
       default:"PENDING",
     },
+    flags: [{
+      investor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      reason: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      }
+    }],
   },
   { timestamps: true }
 );

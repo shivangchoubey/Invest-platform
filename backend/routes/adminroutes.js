@@ -5,6 +5,9 @@ import {
   approveStartup,
   rejectStartup,
   getPendingStartups,
+  getFlaggedStartups,
+  ignoreFlag,
+  removeFlaggedStartup
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -28,6 +31,27 @@ router.put(
   protect,
   authorizeRoles("ADMIN"),
   rejectStartup
+);
+
+router.get(
+  "/flagged",
+  protect,
+  authorizeRoles("ADMIN"),
+  getFlaggedStartups
+);
+
+router.put(
+  "/flagged/:id/ignore",
+  protect,
+  authorizeRoles("ADMIN"),
+  ignoreFlag
+);
+
+router.delete(
+  "/startups/:id",
+  protect,
+  authorizeRoles("ADMIN"),
+  removeFlaggedStartup
 );
 
 export default router;
