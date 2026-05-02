@@ -4,7 +4,9 @@ import { formatCurrency } from "../utils/formatters";
 
 const AdminDashboard = ({ user }) => {
   const [pendingStartups, setPendingStartups] = useState([]);
+  const [flaggedStartups, setFlaggedStartups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("pending");
 
   const fetchPendingStartups = async () => {
     try {
@@ -18,9 +20,38 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
+  const fetchFlaggedStartups = async () => {
+    try {
+      const { data } = await api.get("/admin/flagged");
+      setFlaggedStartups(data);
+    } catch (error) {
+      console.error("Failed to fetch flagged startups", error);
+    }
+  };
+
   useEffect(() => {
     fetchPendingStartups();
+    fetchFlaggedStartups();
   }, []);
+
+  const handleIgnoreFlag = async (id) => {
+    try {
+      await api.put(`/admin/flagged/${id}/ignore`);
+      fetchFlaggedStartups();
+    } catch (error) {
+      console.error("Failed to ignore flag", error);
+    }
+  };
+
+  const handleRemoveFlagged = async (id) => {
+    try {
+      await api.delete(`/admin/startups/${id}`);
+      fetchFlaggedStartups();
+      fetchPendingStartups();
+    } catch (error) {
+      console.error("Failed to remove startup", error);
+    }
+  };
 
   const handleAction = async (id, action) => {
     try {
@@ -60,8 +91,24 @@ const AdminDashboard = ({ user }) => {
         </p>
       </div>
 
+      <div className="flex gap-4 mb-8 border-b border-gray-200">
+        <button 
+          onClick={() => setActiveTab("pending")}
+          className={`py-3 px-4 font-bold text-sm border-b-2 transition ${activeTab === "pending" ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-800"}`}
+        >
+          Pending Verification ({pendingStartups.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab("flagged")}
+          className={`py-3 px-4 font-bold text-sm border-b-2 transition ${activeTab === "flagged" ? "border-red-500 text-red-500" : "border-transparent text-gray-500 hover:text-gray-800"}`}
+        >
+          Flagged Entities ({flaggedStartups.length})
+        </button>
+      </div>
+
       <div className="flex flex-col gap-5">
-        {pendingStartups.length === 0 ? (
+        {activeTab === "pending" ? (
+          pendingStartups.length === 0 ? (
           <div className="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center">
             <h3 className="text-xl font-bold text-[#111] mb-2">All Caught Up!</h3>
             <p className="text-gray-500 font-medium">There are no pending startups to review at this time.</p>
@@ -121,6 +168,52 @@ const AdminDashboard = ({ user }) => {
               </div>
             </div>
           ))
+        ) : (
+          flaggedStartups.length === 0 ? (
+            <div className="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center">
+              <h3 className="text-xl font-bold text-[#111] mb-2">No Flags!</h3>
+              <p className="text-gray-500 font-medium">There are no flagged startups at this time.</p>
+            </div>
+          ) : (
+            flaggedStartups.map((startup) => (
+              <div key={startup._id} className="bg-white p-6 rounded-3xl shadow-sm border border-red-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-md transition">
+                <div className="flex items-start gap-6 w-full md:w-3/4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <h2 className="text-xl font-bold text-[#111]">{startup.title}</h2>
+                      <span className="bg-red-50 text-red-500 border border-red-100 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        FLAGGED ({startup.flags.length})
+                      </span>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <p className="text-sm font-bold text-gray-700 mb-1">Reasons provided:</p>
+                      <ul className="list-disc pl-5 text-sm text-gray-500">
+                        {startup.flags.map((flag, i) => (
+                          <li key={i}>{flag.reason}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 w-full md:w-auto shrink-0 md:justify-end">
+                  <button 
+                    onClick={() => handleIgnoreFlag(startup._id)}
+                    className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#111] border border-gray-200 px-5 py-2.5 rounded-full font-bold text-sm transition shadow-sm"
+                  >
+                    Ignore Request
+                  </button>
+                  <button 
+                    onClick={() => handleRemoveFlagged(startup._id)}
+                    className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-full font-bold text-sm transition shadow-sm"
+                  >
+                    Remove Startup
+                  </button>
+                </div>
+              </div>
+            ))
+          )
         )}
       </div>
     </div>

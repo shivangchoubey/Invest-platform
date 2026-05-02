@@ -18,6 +18,11 @@ const StartupDetails = () => {
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState(null);
 
+  const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagging, setFlagging] = useState(false);
+  const [flagError, setFlagError] = useState(null);
+
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const fetchDetails = async () => {
@@ -96,6 +101,22 @@ const StartupDetails = () => {
       setCommitError(err.response?.data?.message || "Failed to commit funds");
     } finally {
       setCommitting(false);
+    }
+  };
+
+  const handleFlagStartup = async (e) => {
+    e.preventDefault();
+    setFlagging(true);
+    setFlagError(null);
+    try {
+      await api.post(`/startups/${id}/flag`, { reason: flagReason });
+      setIsFlagModalOpen(false);
+      setFlagReason("");
+      alert("Startup has been reported. Admin will review the request.");
+    } catch (err) {
+      setFlagError(err.response?.data?.message || "Failed to flag startup");
+    } finally {
+      setFlagging(false);
     }
   };
 
@@ -309,9 +330,20 @@ const StartupDetails = () => {
                   Commit Funds
                 </button>
               )}
-              <button className="w-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 hover:text-primary transition-colors hover:border-primary/30">
+              <button 
+                onClick={() => {
+                  if (isInvestor) {
+                    setIsFlagModalOpen(true);
+                  } else {
+                    alert("Only investors can report startups.");
+                  }
+                }}
+                className="w-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors hover:border-red-200"
+                title="Report Startup"
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                  <line x1="4" y1="22" x2="4" y2="15"></line>
                 </svg>
               </button>
             </div>
@@ -488,6 +520,63 @@ const StartupDetails = () => {
                     className="px-6 py-2.5 rounded-full text-sm font-bold text-white bg-primary hover:bg-primary/90 transition shadow disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {committing ? "Processing..." : "Confirm Investment"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Flag Modal */}
+      {isFlagModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden transform transition-all">
+            <div className="p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-red-500">Report Startup</h2>
+                <button 
+                  onClick={() => setIsFlagModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleFlagStartup} className="space-y-5">
+                {flagError && (
+                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                    {flagError}
+                  </div>
+                )}
+                
+                <div>
+                  <label htmlFor="reason" className="block text-sm font-semibold text-secondary mb-2">Reason for reporting</label>
+                  <textarea
+                    id="reason"
+                    required
+                    rows="4"
+                    value={flagReason}
+                    onChange={(e) => setFlagReason(e.target.value)}
+                    placeholder="Describe the issue or violation..."
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsFlagModalOpen(false)}
+                    className="px-6 py-2.5 rounded-full text-sm font-bold text-gray-500 hover:bg-gray-100 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={flagging || !flagReason.trim()}
+                    className="px-6 py-2.5 rounded-full text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition shadow disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {flagging ? "Submitting..." : "Submit Report"}
                   </button>
                 </div>
               </form>

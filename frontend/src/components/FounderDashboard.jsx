@@ -30,6 +30,31 @@ const FounderDashboard = ({ user }) => {
     fetchMyStartups();
   };
 
+  const handleRemoveVenture = async (id) => {
+    if (window.confirm("Are you sure you want to remove this venture?")) {
+      try {
+        await api.delete(`/startups/${id}`);
+        fetchMyStartups();
+      } catch (error) {
+        console.error("Failed to remove venture", error);
+        alert("Failed to remove venture");
+      }
+    }
+  };
+
+  const handleRaiseAgain = async (id) => {
+    const newGoal = window.prompt("Enter new funding goal:");
+    if (newGoal && !isNaN(newGoal)) {
+      try {
+        await api.put(`/startups/${id}/raise-again`, { fundingGoal: Number(newGoal) });
+        fetchMyStartups();
+      } catch (error) {
+        console.error("Failed to update funding goal", error);
+        alert("Failed to update funding goal");
+      }
+    }
+  };
+
   const totalVentures = startups.length;
   const fundingSecured = startups.reduce((acc, curr) => acc + (curr.amountRaised || 0), 0);
   const activeInvestors = startups.reduce((acc, curr) => acc + (curr.investorCount || 0), 0);
@@ -129,17 +154,36 @@ const FounderDashboard = ({ user }) => {
                   </div>
 
                   {isApproved ? (
-                    <Link to={`/startup/${startup._id}`} className="w-full flex justify-center items-center gap-2 py-3 border border-gray-200 rounded-full text-sm font-bold text-secondary hover:bg-gray-50 transition">
-                      Manage Entity <span className="transform translate-y-[1px]">→</span>
-                    </Link>
+                    <div className="flex flex-col gap-2 w-full">
+                      <Link to={`/startup/${startup._id}`} className="w-full flex justify-center items-center gap-2 py-3 border border-gray-200 rounded-full text-sm font-bold text-secondary hover:bg-gray-50 transition">
+                        Manage Entity <span className="transform translate-y-[1px]">→</span>
+                      </Link>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleRaiseAgain(startup._id)} className="flex-1 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold hover:bg-primary/20 transition">
+                          Raise Again
+                        </button>
+                        <button onClick={() => handleRemoveVenture(startup._id)} className="flex-1 py-2 bg-red-50 text-red-500 rounded-full text-xs font-bold hover:bg-red-100 transition">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
                   ) : isPending ? (
                      <button className="w-full flex justify-center items-center py-3 border border-gray-200 rounded-full text-sm font-bold text-gray-400 hover:bg-gray-50 transition cursor-not-allowed">
                       Complete Onboarding
                      </button>
+                  ) : isRejected ? (
+                     <div className="flex flex-col gap-2 w-full">
+                       <button className="w-full flex justify-center gap-2 items-center py-3 bg-gray-100 text-gray-500 rounded-full text-sm font-bold hover:bg-gray-200 transition">
+                         ⟲ Re-submit Application
+                       </button>
+                       <button onClick={() => handleRemoveVenture(startup._id)} className="w-full py-2 bg-red-50 text-red-500 rounded-full text-xs font-bold hover:bg-red-100 transition">
+                         Remove
+                       </button>
+                     </div>
                   ) : (
-                     <button className="w-full flex justify-center gap-2 items-center py-3 bg-gray-100 text-gray-500 rounded-full text-sm font-bold hover:bg-gray-200 transition">
-                       ⟲ Re-submit Application
-                     </button>
+                     <div className="w-full flex justify-center items-center py-3 bg-gray-100 rounded-full text-sm font-bold text-gray-400">
+                      Closed Venture
+                     </div>
                   )}
                 </div>
               </div>
