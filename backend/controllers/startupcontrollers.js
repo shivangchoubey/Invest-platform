@@ -3,7 +3,7 @@ import Investment from "../models/invest.js"; // ✅ FIXED: correct file name
 
 export const createStartup = async (req, res) => {
   try {
-    const { title, description, opportunity, industryType, fundingGoal, image } = req.body;
+    const { title, description, opportunity, industryType, fundingGoal, image, equityOffered } = req.body;
 
     const startup = await Startup.create({
       title,
@@ -11,6 +11,7 @@ export const createStartup = async (req, res) => {
       opportunity,
       industryType: industryType || "TECH",
       fundingGoal,
+      equityOffered: equityOffered || 0,
       image: image || undefined,
       founder: req.user._id,
       // verificationStatus will default to "PENDING"
@@ -238,6 +239,32 @@ export const raiseAgain = async (req, res) => {
     await startup.save();
 
     res.json({ message: "Funding goal updated successfully", startup });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteStartupCompletely = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const startup = await Startup.findById(id);
+
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    if (startup.founder.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (startup.verificationStatus !== "REMOVED") {
+      return res.status(400).json({ message: "Startup must be removed first before complete deletion." });
+    }
+
+    await Investment.deleteMany({ startup: id });
+    await startup.deleteOne();
+
+    res.json({ message: "Startup completely deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

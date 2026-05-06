@@ -16,6 +16,10 @@ const investmentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    equity: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

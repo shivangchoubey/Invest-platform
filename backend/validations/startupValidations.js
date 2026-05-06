@@ -6,6 +6,7 @@ export const startupSchema = z.object({
   opportunity: z.string().optional(),
   industryType: z.enum(['SAAS', 'GREENTECH', 'FINTECH', 'HEALTH', 'WEALTH', 'TECH', 'FMCG', 'AI', 'EDTECH']).optional(),
   fundingGoal: z.number().positive(),
+  equityOffered: z.number().min(0).max(100),
   image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 

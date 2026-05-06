@@ -10,7 +10,8 @@ import {
   updateStartupImage,
   flagStartup,
   removeStartup,
-  raiseAgain
+  raiseAgain,
+  deleteStartupCompletely
 } from "../controllers/startupcontrollers.js";
 import validate from "../middlewares/validate.js";
 import { updateImageSchema } from "../validations/startupValidations.js";
@@ -51,6 +52,13 @@ router.delete(
   protect,
   authorizeRoles("FOUNDER"),
   removeStartup
+);
+
+router.delete(
+  "/:id/complete",
+  protect,
+  authorizeRoles("FOUNDER"),
+  deleteStartupCompletely
 );
 
 router.put(

@@ -14,6 +14,10 @@ const startupSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    equityOffered: {
+      type: Number,
+      default: 0,
+    },
     amountRaised: {
       type: Number,
       default: 0,
