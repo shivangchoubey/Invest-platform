@@ -55,6 +55,18 @@ const FounderDashboard = ({ user }) => {
     }
   };
 
+  const handleCompleteRemoval = async (id) => {
+    if (window.confirm("Are you sure you want to completely delete this venture? This action cannot be undone.")) {
+      try {
+        await api.delete(`/startups/${id}/complete`);
+        fetchMyStartups();
+      } catch (error) {
+        console.error("Failed to delete venture", error);
+        alert(error.response?.data?.message || "Failed to completely remove venture");
+      }
+    }
+  };
+
   const totalVentures = startups.length;
   const fundingSecured = startups.reduce((acc, curr) => acc + (curr.amountRaised || 0), 0);
   const activeInvestors = startups.reduce((acc, curr) => acc + (curr.investorCount || 0), 0);
@@ -181,8 +193,13 @@ const FounderDashboard = ({ user }) => {
                        </button>
                      </div>
                   ) : (
-                     <div className="w-full flex justify-center items-center py-3 bg-gray-100 rounded-full text-sm font-bold text-gray-400">
-                      Closed Venture
+                     <div className="flex flex-col gap-2 w-full">
+                       <div className="w-full flex justify-center items-center py-3 bg-gray-100 rounded-full text-sm font-bold text-gray-400">
+                        Closed Venture
+                       </div>
+                       <button onClick={() => handleCompleteRemoval(startup._id)} className="w-full py-2 bg-red-50 text-red-500 rounded-full text-xs font-bold hover:bg-red-100 transition">
+                         Delete Permanently
+                       </button>
                      </div>
                   )}
                 </div>

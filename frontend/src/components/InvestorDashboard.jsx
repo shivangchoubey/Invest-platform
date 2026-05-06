@@ -33,6 +33,20 @@ const InvestorDashboard = ({ user }) => {
 
   const primaryAsset = investments.length > 0 ? investments[0] : null;
 
+  const handleDeleteInvestment = async (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to remove this investment from your portfolio?")) {
+      try {
+        await api.delete(`/invest/${id}`);
+        setInvestments(investments.filter(inv => inv._id !== id));
+      } catch (err) {
+        console.error("Failed to delete investment", err);
+        alert(err.response?.data?.message || "Failed to delete investment");
+      }
+    }
+  };
+
   return (
     <div>
       {/* Header Section */}
@@ -76,7 +90,7 @@ const InvestorDashboard = ({ user }) => {
             
             {/* Primary Asset Card */}
             {primaryAsset && (
-              <Link to={`/startup/${primaryAsset.startup?._id}`} className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row overflow-hidden hover:shadow-md transition">
+              <Link to={`/startup/${primaryAsset.startup?._id}`} className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row overflow-hidden hover:shadow-md transition relative group">
                 <div className="relative w-full sm:w-2/5 h-64 sm:h-auto bg-secondary">
                   <img src={primaryAsset.startup?.image || "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=800"} alt="Office logic" className="w-full h-full object-cover opacity-80 mix-blend-overlay" />
                   <div className="absolute top-4 left-4 bg-[#e5a03b] text-white text-[9px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 uppercase tracking-wider shadow-sm">
@@ -85,7 +99,16 @@ const InvestorDashboard = ({ user }) => {
                   </div>
                 </div>
                 <div className="flex-1 p-8 flex flex-col justify-center bg-gray-50/30">
-                  <h3 className="text-2xl font-bold text-secondary mb-3">{primaryAsset.startup?.title || "N/A"}</h3>
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-2xl font-bold text-secondary mb-3">{primaryAsset.startup?.title || "N/A"}</h3>
+                    <button 
+                      onClick={(e) => handleDeleteInvestment(e, primaryAsset._id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      title="Remove Investment"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-500 mb-10 leading-relaxed">
                      Next-generation cognitive automation for logistics and industrial scale manufacturing.
                   </p>
@@ -93,6 +116,10 @@ const InvestorDashboard = ({ user }) => {
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">Invested Amount</p>
                       <div className="text-lg font-bold text-primary">{formatCurrency(primaryAsset.amount)}</div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">Equity Holding</p>
+                      <div className="text-lg font-bold text-primary">{(primaryAsset.equity || 0).toFixed(2)}%</div>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">Execution Date</p>
@@ -152,14 +179,23 @@ const InvestorDashboard = ({ user }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {investments.map((inv, idx) => (
-              <Link to={`/startup/${inv.startup?._id}`} key={inv._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md hover:border-primary/30 transition duration-300">
+              <Link to={`/startup/${inv.startup?._id}`} key={inv._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md hover:border-primary/30 transition duration-300 relative group">
                 <div className="flex justify-between items-start mb-6">
-                   <div className="w-12 h-12 bg-secondary rounded-full flex justify-center items-center overflow-hidden">
-                     <span className="text-white font-bold text-xs">{inv.startup?.title?.substring(0, 2).toUpperCase()}</span>
+                   <div className="flex items-center gap-3">
+                     <div className="w-12 h-12 bg-secondary rounded-full flex justify-center items-center overflow-hidden">
+                       <span className="text-white font-bold text-xs">{inv.startup?.title?.substring(0, 2).toUpperCase()}</span>
+                     </div>
+                     <div className="bg-[#fff8eb] text-[#e5a03b] text-[8px] font-bold px-2 py-1 rounded uppercase tracking-wider h-fit">
+                       {inv.startup?.industryType || 'TECH'}
+                     </div>
                    </div>
-                   <div className="bg-[#fff8eb] text-[#e5a03b] text-[8px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                     {inv.startup?.industryType || 'TECH'}
-                   </div>
+                   <button 
+                     onClick={(e) => handleDeleteInvestment(e, inv._id)}
+                     className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
+                     title="Remove Investment"
+                   >
+                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                   </button>
                 </div>
 
                 <h4 className="text-lg font-bold text-secondary mb-6">{inv.startup?.title || "Unknown"}</h4>
@@ -168,6 +204,10 @@ const InvestorDashboard = ({ user }) => {
                   <div>
                     <p className="text-[9px] font-bold text-gray-400 tracking-wider uppercase mb-1">Commitment</p>
                     <div className="text-[17px] font-bold text-primary">{formatCurrency(inv.amount)}</div>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-gray-400 tracking-wider uppercase mb-1">Equity Holding</p>
+                    <div className="text-[17px] font-bold text-primary">{(inv.equity || 0).toFixed(2)}%</div>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-gray-400 tracking-wider uppercase mb-1">Entry Date</p>

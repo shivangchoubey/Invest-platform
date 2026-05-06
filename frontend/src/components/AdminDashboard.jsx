@@ -168,7 +168,7 @@ const AdminDashboard = ({ user }) => {
               </div>
             </div>
           ))
-        ) : (
+        )) : (
           flaggedStartups.length === 0 ? (
             <div className="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center">
               <h3 className="text-xl font-bold text-[#111] mb-2">No Flags!</h3>

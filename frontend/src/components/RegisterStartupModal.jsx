@@ -8,6 +8,7 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
     opportunity: "",
     industryType: "TECH",
     fundingGoal: "",
+    equityOffered: "",
     image: ""
   });
   const [loading, setLoading] = useState(false);
@@ -27,9 +28,10 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       await api.post("/startups", {
         ...formData,
-        fundingGoal: Number(formData.fundingGoal)
+        fundingGoal: Number(formData.fundingGoal),
+        equityOffered: Number(formData.equityOffered)
       });
-      setFormData({ title: "", description: "", opportunity: "", industryType: "TECH", fundingGoal: "", image: "" });
+      setFormData({ title: "", description: "", opportunity: "", industryType: "TECH", fundingGoal: "", equityOffered: "", image: "" });
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to register venture. Please try again.");
@@ -142,6 +144,28 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
                   placeholder="5000000"
                   className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="equityOffered" className="block text-sm font-semibold text-secondary mb-2">Equity Offered (%)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  id="equityOffered"
+                  name="equityOffered"
+                  required
+                  min="0.01"
+                  max="100"
+                  step="0.01"
+                  value={formData.equityOffered}
+                  onChange={handleChange}
+                  placeholder="5"
+                  className="w-full pr-8 pl-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+                />
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                  <span className="text-gray-500 font-semibold">%</span>
+                </div>
               </div>
             </div>
 

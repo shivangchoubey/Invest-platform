@@ -189,6 +189,14 @@ const StartupDetails = () => {
                     {formatCurrency(startup.amountRaised)}
                   </p>
                 </div>
+                <div className="text-center">
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">
+                    Equity Offered
+                  </p>
+                  <p className="text-2xl font-bold text-[#222]">
+                    {startup.equityOffered || 0}%
+                  </p>
+                </div>
                 <div className="text-right">
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">
                     Funding Goal
@@ -504,6 +512,11 @@ const StartupDetails = () => {
                   <p className="text-xs text-gray-500 mt-2 font-medium">
                     Maximum remaining: {formatCurrency(startup.fundingGoal - startup.amountRaised)}
                   </p>
+                  {commitAmount && (
+                    <p className="text-xs text-primary mt-2 font-bold">
+                      Expected Equity: {((commitAmount / startup.fundingGoal) * (startup.equityOffered || 0)).toFixed(2)}%
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
