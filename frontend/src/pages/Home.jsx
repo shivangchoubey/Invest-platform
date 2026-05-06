@@ -8,11 +8,14 @@ const Home = () => {
   const [startups, setStartups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [order, setOrder] = useState("desc");
 
   useEffect(() => {
     const fetchStartups = async () => {
       try {
-        const res = await api.get("/startups");
+        setLoading(true);
+        const res = await api.get(`/startups?sortBy=${sortBy}&order=${order}`);
         setStartups(res.data.data);
       } catch (err) {
         setError(err.response?.data?.message || err.message || "Failed to fetch startups");
@@ -22,7 +25,7 @@ const Home = () => {
     };
 
     fetchStartups();
-  }, []);
+  }, [sortBy, order]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -79,10 +82,16 @@ const Home = () => {
           {/* Filters */}
           <div className="flex items-center gap-3 bg-gray-50/50 p-1.5 rounded-full border border-gray-100">
             <span className="text-sm font-semibold text-gray-400 pl-4 pr-2">Sort by:</span>
-            <button className="bg-white text-primary text-sm font-bold px-5 py-2 rounded-full shadow-sm border border-gray-100">
+            <button 
+              onClick={() => { setSortBy("createdAt"); setOrder("desc"); }}
+              className={`${sortBy === "createdAt" ? "bg-white text-primary shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-800"} text-sm font-bold px-5 py-2 rounded-full transition`}
+            >
               Latest
             </button>
-            <button className="text-gray-500 text-sm font-semibold px-4 py-2 rounded-full hover:text-gray-800 transition">
+            <button 
+              onClick={() => { setSortBy("fundingProgress"); setOrder("desc"); }}
+              className={`${sortBy === "fundingProgress" ? "bg-white text-primary shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-800"} text-sm font-bold px-5 py-2 rounded-full transition`}
+            >
               Funding Progress
             </button>
           </div>
