@@ -27,7 +27,7 @@ export const getAllStartups = async (req, res) => {
   try {
     // 🔹 query params
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    const limit = parseInt(req.query.limit) || 10;
     const sortBy = req.query.sortBy || "createdAt"; // optional
     const order = req.query.order === "asc" ? 1 : -1;
 
@@ -38,24 +38,48 @@ export const getAllStartups = async (req, res) => {
       verificationStatus: "APPROVED",
     });
 
-    // 🔹 fetch startups
-    const startups = await Startup.find({
-      verificationStatus: "APPROVED",
-    })
-      .populate("founder", "name email role")
-      .sort({ [sortBy]: order })
-      .skip(skip)
-      .limit(limit);
+    let startups = [];
+
+    if (sortBy === "fundingProgress") {
+      startups = await Startup.aggregate([
+        { $match: { verificationStatus: "APPROVED" } },
+        {
+          $addFields: {
+            fundingProgressNum: {
+              $cond: [
+                { $eq: ["$fundingGoal", 0] },
+                0,
+                { $multiply: [{ $divide: ["$amountRaised", "$fundingGoal"] }, 100] }
+              ]
+            }
+          }
+        },
+        { $sort: { fundingProgressNum: order } },
+        { $skip: skip },
+        { $limit: limit }
+      ]);
+      await Startup.populate(startups, { path: "founder", select: "name email role" });
+    } else {
+      // 🔹 fetch startups
+      startups = await Startup.find({
+        verificationStatus: "APPROVED",
+      })
+        .populate("founder", "name email role")
+        .sort({ [sortBy]: order })
+        .skip(skip)
+        .limit(limit);
+    }
 
     // 🔹 get investor count for each startup
     const result = await Promise.all(
       startups.map(async (s) => {
+        const startupId = s._id || s._id;
         const investorCount = await Investment.countDocuments({
-          startup: s._id,
+          startup: startupId,
         });
 
         return {
-          ...s._doc,
+          ...(s._doc || s),
           fundingProgress: (
             (s.amountRaised / s.fundingGoal) *
             100
