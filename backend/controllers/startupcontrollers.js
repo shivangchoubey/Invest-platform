@@ -1,9 +1,10 @@
 import Startup from "../models/startup.js";
 import Investment from "../models/invest.js"; // ✅ FIXED: correct file name
+import Message from "../models/message.js";
 
 export const createStartup = async (req, res) => {
   try {
-    const { title, description, opportunity, industryType, fundingGoal, image, equityOffered } = req.body;
+    const { title, description, opportunity, industryType, fundingGoal, image, equityOffered, pitchPdf, pitchVideo } = req.body;
 
     const startup = await Startup.create({
       title,
@@ -13,6 +14,8 @@ export const createStartup = async (req, res) => {
       fundingGoal,
       equityOffered: equityOffered || 0,
       image: image || undefined,
+      pitchPdf,
+      pitchVideo,
       founder: req.user._id,
       // verificationStatus will default to "PENDING"
     });
@@ -288,7 +291,36 @@ export const deleteStartupCompletely = async (req, res) => {
     await Investment.deleteMany({ startup: id });
     await startup.deleteOne();
 
-    res.json({ message: "Startup completely deleted" });
+    res.json({ message: "Startup and all associated investments permanently deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getStartupMessages = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const messages = await Message.find({ startup: id })
+      .populate("sender", "name email role")
+      .sort({ createdAt: 1 }); // Oldest first (for chat history)
+
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const clearStartupMessages = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const startup = await Startup.findById(id);
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    await Message.deleteMany({ startup: id });
+    res.json({ message: "Chat cleared successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

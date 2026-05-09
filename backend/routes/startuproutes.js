@@ -11,7 +11,9 @@ import {
   flagStartup,
   removeStartup,
   raiseAgain,
-  deleteStartupCompletely
+  deleteStartupCompletely,
+  getStartupMessages,
+  clearStartupMessages
 } from "../controllers/startupcontrollers.js";
 import validate from "../middlewares/validate.js";
 import { updateImageSchema } from "../validations/startupValidations.js";
@@ -66,6 +68,18 @@ router.put(
   protect,
   authorizeRoles("FOUNDER"),
   raiseAgain
+);
+
+router.get(
+  "/:id/messages",
+  protect,
+  getStartupMessages
+);
+
+router.delete(
+  "/:id/messages",
+  protect,
+  clearStartupMessages
 );
 
 export default router;

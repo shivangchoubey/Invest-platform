@@ -58,6 +58,12 @@ const startupSchema = new mongoose.Schema(
         default: Date.now,
       }
     }],
+    pitchPdf: {
+      type: String,
+    },
+    pitchVideo: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

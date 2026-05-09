@@ -8,6 +8,8 @@ export const startupSchema = z.object({
   fundingGoal: z.number().positive(),
   equityOffered: z.number().min(0).max(100),
   image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  pitchPdf: z.string().optional().or(z.literal("")),
+  pitchVideo: z.string().optional().or(z.literal("")),
 });
 
 export const updateImageSchema = z.object({
