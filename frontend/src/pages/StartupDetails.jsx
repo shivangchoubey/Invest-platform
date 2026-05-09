@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
+import { io } from "socket.io-client";
 import api from "../services/api";
 import { formatCurrency } from "../utils/formatters";
 
@@ -23,6 +24,11 @@ const StartupDetails = () => {
   const [flagging, setFlagging] = useState(false);
   const [flagError, setFlagError] = useState(null);
 
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const fetchDetails = async () => {
@@ -36,9 +42,46 @@ const StartupDetails = () => {
     }
   };
 
+  const fetchMessages = async () => {
+    try {
+      const res = await api.get(`/startups/${id}/messages`);
+      setMessages(res.data);
+    } catch (err) {
+      console.error("Failed to load messages:", err);
+    }
+  };
+
   useEffect(() => {
     fetchDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (startupData) {
+      fetchMessages();
+
+      // Ensure API URL matches where the backend is hosted
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      socketRef.current = io(API_URL);
+
+      socketRef.current.emit("join-room", id);
+
+      socketRef.current.on("receive-message", (msg) => {
+        setMessages((prev) => [...prev, msg]);
+      });
+
+      socketRef.current.on("chat-cleared", () => {
+        setMessages([]);
+      });
+
+      return () => {
+        socketRef.current.disconnect();
+      };
+    }
+  }, [startupData, id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   if (loading) {
     return (
@@ -120,6 +163,30 @@ const StartupDetails = () => {
     }
   };
 
+  const handleClearChat = async () => {
+    if (!window.confirm("Are you sure you want to clear all chat messages for this room? This cannot be undone.")) return;
+    try {
+      await api.delete(`/startups/${id}/messages`);
+      if (socketRef.current) {
+        socketRef.current.emit("clear-chat", id);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to clear chat");
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !user) return;
+    
+    socketRef.current.emit("send-message", {
+      startupId: id,
+      senderId: user._id,
+      content: newMessage,
+    });
+    
+    setNewMessage("");
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-sans text-secondary pb-24">
       {/* Basic Navbar (Same aesthetic) */}
@@ -176,6 +243,34 @@ const StartupDetails = () => {
               <p className="mt-6 text-[15px] font-medium text-gray-500 leading-relaxed max-w-2xl">
                 {startup.description}
               </p>
+
+              {/* Pitch Buttons */}
+              {(startup.pitchPdf || startup.pitchVideo) && (
+                <div className="flex gap-4 mt-8">
+                  {startup.pitchPdf && (
+                    <a 
+                      href={startup.pitchPdf}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-white border border-gray-200 text-primary px-5 py-3 rounded-xl font-bold hover:bg-gray-50 transition shadow-sm flex items-center gap-2"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                      My Pitch (PDF)
+                    </a>
+                  )}
+                  {startup.pitchVideo && (
+                    <a 
+                      href={startup.pitchVideo}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-white border border-gray-200 text-red-500 px-5 py-3 rounded-xl font-bold hover:bg-gray-50 transition shadow-sm flex items-center gap-2"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                      My Pitch (Video)
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Funding Progress Box */}
@@ -306,7 +401,7 @@ const StartupDetails = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
               
               {isFounder && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                   <button 
                     onClick={() => {
                       setNewImageUrl(startup.image || "");
@@ -370,47 +465,90 @@ const StartupDetails = () => {
                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">Founder</p>
                    </div>
                 </div>
-                {/* Live Indicator */}
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 rounded-full">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Live</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleClearChat}
+                    className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                    title="Clear Chat History"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                  {/* Live Indicator */}
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 rounded-full">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Live</span>
+                  </div>
                 </div>
               </div>
 
               {/* Chat bubbles */}
               <div className="flex-1 flex flex-col gap-5 overflow-y-auto w-full no-scrollbar pr-2 mb-4">
-                <div className="flex flex-col items-start gap-1">
-                  <span className="text-[10px] font-semibold text-gray-400 ml-3">{startup.founder?.name || "Founder"}</span>
-                  <div className="bg-white px-5 py-4 rounded-2xl rounded-tl-sm text-[13px] font-medium text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-50 max-w-[90%] leading-relaxed">
-                    Welcome to our ledger room. I'm available for any specific questions regarding our patent portfolio.
-                  </div>
-                </div>
-
                 <div className="flex justify-center my-4">
                   <span className="bg-[#E8F3EE] text-primary text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest">
                     Encryption Active (End-to-End)
                   </span>
                 </div>
+                
+                {/* Always show this as the first initial message */}
+                <div className="flex flex-col items-start gap-1">
+                  <span className="text-[10px] font-semibold text-gray-400 ml-3">{startup.founder?.name || "Founder"}</span>
+                  <div className="bg-white px-5 py-4 rounded-2xl rounded-tl-sm text-[13px] font-medium text-gray-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-50 max-w-[90%] leading-relaxed">
+                    Welcome to our ledger room. I'm available for any specific questions regarding our venture.
+                  </div>
+                </div>
+
+                {messages.map((msg, index) => {
+                  const isMine = user && msg.sender?._id === user._id;
+                  return (
+                    <div key={index} className={`flex flex-col gap-1 ${isMine ? 'items-end' : 'items-start'}`}>
+                      <span className={`text-[10px] font-semibold text-gray-400 ${isMine ? 'mr-3' : 'ml-3'}`}>
+                        {msg.sender?.name || "Unknown"}
+                      </span>
+                      <div className={`px-5 py-4 rounded-2xl text-[13px] font-medium shadow-[0_2px_10px_rgba(0,0,0,0.02)] max-w-[90%] leading-relaxed ${
+                        isMine 
+                          ? 'bg-primary text-white rounded-tr-sm border border-primary' 
+                          : 'bg-white text-gray-600 rounded-tl-sm border border-gray-50'
+                      }`}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Input Area */}
               <div className="relative mt-auto">
                 <input 
                   type="text" 
-                  disabled
-                  placeholder="Real-time chat will be enabled soon ..." 
-                  className="w-full bg-white text-gray-400 text-[12px] font-semibold rounded-2xl px-5 py-4 border border-gray-200 outline-none pr-12 cursor-not-allowed"
+                  disabled={!user}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSendMessage();
+                  }}
+                  placeholder={user ? "Type your message..." : "Log in to chat..."}
+                  className="w-full bg-white text-gray-800 text-[13px] font-semibold rounded-2xl px-5 py-4 border border-gray-200 outline-none pr-12 focus:border-primary focus:ring-1 focus:ring-primary transition disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400"
                 />
-                <button disabled className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-300">
+                <button 
+                  disabled={!user || !newMessage.trim()} 
+                  onClick={handleSendMessage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-primary hover:bg-primary/10 rounded-full transition disabled:text-gray-300 disabled:hover:bg-transparent"
+                >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                   </svg>
                 </button>
               </div>
-              <p className="text-[9px] font-semibold text-center text-gray-400 uppercase tracking-widest mt-4">
-                Investor verification required for active participation
-              </p>
+              {!user && (
+                <p className="text-[9px] font-semibold text-center text-gray-400 uppercase tracking-widest mt-4">
+                  Investor verification required for active participation
+                </p>
+              )}
 
             </div>
 

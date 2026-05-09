@@ -9,7 +9,9 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
     industryType: "TECH",
     fundingGoal: "",
     equityOffered: "",
-    image: ""
+    image: "",
+    pitchPdf: "",
+    pitchVideo: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -31,7 +33,7 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
         fundingGoal: Number(formData.fundingGoal),
         equityOffered: Number(formData.equityOffered)
       });
-      setFormData({ title: "", description: "", opportunity: "", industryType: "TECH", fundingGoal: "", equityOffered: "", image: "" });
+      setFormData({ title: "", description: "", opportunity: "", industryType: "TECH", fundingGoal: "", equityOffered: "", image: "", pitchPdf: "", pitchVideo: "" });
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to register venture. Please try again.");
@@ -178,6 +180,32 @@ const RegisterStartupModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.image}
                 onChange={handleChange}
                 placeholder="https://example.com/image.jpg"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="pitchPdf" className="block text-sm font-semibold text-secondary mb-2">Pitch Deck (PDF URL) (Optional)</label>
+              <input
+                type="text"
+                id="pitchPdf"
+                name="pitchPdf"
+                value={formData.pitchPdf || ""}
+                onChange={handleChange}
+                placeholder="https://example.com/pitch.pdf"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="pitchVideo" className="block text-sm font-semibold text-secondary mb-2">Pitch Video (YouTube/Vimeo URL) (Optional)</label>
+              <input
+                type="text"
+                id="pitchVideo"
+                name="pitchVideo"
+                value={formData.pitchVideo || ""}
+                onChange={handleChange}
+                placeholder="https://youtube.com/watch?v=..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
               />
             </div>

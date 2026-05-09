@@ -10,13 +10,17 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState("desc");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchStartups = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/startups?sortBy=${sortBy}&order=${order}`);
+        // We use limit=6 so it matches a nice grid layout (2 rows of 3)
+        const res = await api.get(`/startups?sortBy=${sortBy}&order=${order}&page=${page}&limit=6`);
         setStartups(res.data.data);
+        setTotalPages(res.data.totalPages || 1);
       } catch (err) {
         setError(err.response?.data?.message || err.message || "Failed to fetch startups");
       } finally {
@@ -25,12 +29,68 @@ const Home = () => {
     };
 
     fetchStartups();
-  }, [sortBy, order]);
+  }, [sortBy, order, page]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
+  };
+
+  const handleSortChange = (newSortBy) => {
+    setSortBy(newSortBy);
+    setOrder("desc");
+    setPage(1); // Reset page to 1 when changing sorting
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition ${
+            page === i
+              ? "bg-primary text-white shadow-sm"
+              : "text-gray-500 hover:bg-gray-50"
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex justify-center items-center mt-16 gap-2">
+        <button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1}
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        
+        {pages}
+        
+        <button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page === totalPages}
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -83,13 +143,13 @@ const Home = () => {
           <div className="flex items-center gap-3 bg-gray-50/50 p-1.5 rounded-full border border-gray-100">
             <span className="text-sm font-semibold text-gray-400 pl-4 pr-2">Sort by:</span>
             <button 
-              onClick={() => { setSortBy("createdAt"); setOrder("desc"); }}
+              onClick={() => handleSortChange("createdAt")}
               className={`${sortBy === "createdAt" ? "bg-white text-primary shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-800"} text-sm font-bold px-5 py-2 rounded-full transition`}
             >
               Latest
             </button>
             <button 
-              onClick={() => { setSortBy("fundingProgress"); setOrder("desc"); }}
+              onClick={() => handleSortChange("fundingProgress")}
               className={`${sortBy === "fundingProgress" ? "bg-white text-primary shadow-sm border border-gray-100" : "text-gray-500 hover:text-gray-800"} text-sm font-bold px-5 py-2 rounded-full transition`}
             >
               Funding Progress
@@ -174,30 +234,7 @@ const Home = () => {
           </div>
         )}
 
-        {/* Pagination placeholder */}
-        <div className="flex justify-center items-center mt-16 gap-2">
-          <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-50 transition">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white font-bold text-xs shadow-sm">
-            1
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 font-bold text-xs hover:bg-gray-50 transition">
-            2
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 font-bold text-xs hover:bg-gray-50 transition">
-            3
-          </button>
-          <span className="text-gray-400 text-xs font-bold mx-1">...</span>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 font-bold text-xs hover:bg-gray-50 transition">
-            12
-          </button>
-          
-          <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-50 transition">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
+        {renderPagination()}
 
       </main>
 
