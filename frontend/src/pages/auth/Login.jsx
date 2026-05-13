@@ -31,12 +31,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center font-sans tracking-tight px-4">
+    <div 
+      className="min-h-screen bg-background flex flex-col items-center justify-center font-sans tracking-tight px-4 bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: `url('/finance_login_bg.png')` }}
+    >
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
 
       {/* Header section */}
       <div className="flex flex-col items-center text-center mb-8 relative z-10">
         <div className="flex justify-center mb-4">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white drop-shadow-lg">
             <path d="M3 21h18"></path>
             <path d="M3 10h18"></path>
             <path d="M5 6l7-3 7 3"></path>
@@ -47,16 +51,16 @@ const Login = () => {
             <path d="M16 14v3"></path>
           </svg>
         </div>
-        <h1 className="text-[28px] font-bold text-primary tracking-tight mb-1">
+        <h1 className="text-[28px] font-extrabold text-white tracking-tight mb-1 drop-shadow-md">
           Dhanex
         </h1>
-        <p className="text-[15px] font-semibold text-muted">
+        <p className="text-[15px] font-medium text-white/80 tracking-wide drop-shadow-sm">
           The Digital Ledger Editorial
         </p>
       </div>
 
       {/* Main Card */}
-      <div className="w-full max-w-[440px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative mb-12 overflow-hidden">
+      <div className="w-full max-w-[440px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] relative mb-12 overflow-hidden z-10">
 
         {/* Top Green Border Line */}
         <div className="h-[4px] bg-primary w-full absolute top-0 left-0"></div>
@@ -178,7 +182,7 @@ const Login = () => {
 
       {/* Bottom Legal/Security Text */}
       <div className="mt-2 text-center pb-8 z-10 w-full max-w-[440px]">
-        <p className="text-[11px] font-bold text-muted tracking-[0.1em] uppercase">
+        <p className="text-[11px] font-bold text-white/70 tracking-[0.1em] uppercase drop-shadow-sm">
           Institutional Grade Security
         </p>
       </div>

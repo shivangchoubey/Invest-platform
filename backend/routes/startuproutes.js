@@ -11,6 +11,7 @@ import {
   flagStartup,
   removeStartup,
   raiseAgain,
+  resubmitStartup,
   deleteStartupCompletely,
   getStartupMessages,
   clearStartupMessages
@@ -70,6 +71,13 @@ router.put(
   raiseAgain
 );
 
+router.put(
+  "/:id/resubmit",
+  protect,
+  authorizeRoles("FOUNDER"),
+  resubmitStartup
+);
+
 router.get(
   "/:id/messages",
   protect,
@@ -79,6 +87,7 @@ router.get(
 router.delete(
   "/:id/messages",
   protect,
+  authorizeRoles("FOUNDER"),
   clearStartupMessages
 );
 

@@ -1,6 +1,8 @@
 import Startup from "../models/startup.js";
-import Investment from "../models/invest.js"; // ✅ FIXED: correct file name
+import Investment from "../models/invest.js";
 import Message from "../models/message.js";
+import { getIo } from "../socket.js";
+import { canAccessChat } from "../utils/access.js";
 
 export const createStartup = async (req, res) => {
   try {
@@ -28,15 +30,13 @@ export const createStartup = async (req, res) => {
 
 export const getAllStartups = async (req, res) => {
   try {
-    // 🔹 query params
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const sortBy = req.query.sortBy || "createdAt"; // optional
+    const sortBy = req.query.sortBy || "createdAt";
     const order = req.query.order === "asc" ? 1 : -1;
 
     const skip = (page - 1) * limit;
 
-    // 🔹 total count for pagination
     const total = await Startup.countDocuments({
       verificationStatus: "APPROVED",
     });
@@ -63,7 +63,6 @@ export const getAllStartups = async (req, res) => {
       ]);
       await Startup.populate(startups, { path: "founder", select: "name email role" });
     } else {
-      // 🔹 fetch startups
       startups = await Startup.find({
         verificationStatus: "APPROVED",
       })
@@ -73,10 +72,9 @@ export const getAllStartups = async (req, res) => {
         .limit(limit);
     }
 
-    // 🔹 get investor count for each startup
     const result = await Promise.all(
       startups.map(async (s) => {
-        const startupId = s._id || s._id;
+        const startupId = s._id;
         const investorCount = await Investment.countDocuments({
           startup: startupId,
         });
@@ -87,7 +85,7 @@ export const getAllStartups = async (req, res) => {
             (s.amountRaised / s.fundingGoal) *
             100
           ).toFixed(2),
-          investorCount, // 🔥 NEW
+          investorCount,
         };
       })
     );
@@ -147,7 +145,6 @@ export const getStartupById = async (req, res) => {
       return res.status(404).json({ message: "Startup not found" });
     }
 
-    // ✅ ADDED: block access if not approved
     if (startup.verificationStatus !== "APPROVED") {
       return res.status(403).json({
         message: "Startup not approved yet",
@@ -271,6 +268,28 @@ export const raiseAgain = async (req, res) => {
   }
 };
 
+export const resubmitStartup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const startup = await Startup.findById(id);
+
+    if (!startup) {
+      return res.status(404).json({ message: "Startup not found" });
+    }
+
+    if (startup.founder.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    startup.verificationStatus = "PENDING";
+    await startup.save();
+
+    res.json({ message: "Startup resubmitted for verification", startup });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const deleteStartupCompletely = async (req, res) => {
   try {
     const { id } = req.params;
@@ -300,9 +319,15 @@ export const deleteStartupCompletely = async (req, res) => {
 export const getStartupMessages = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    const access = await canAccessChat(req.user, id);
+    if (!access.allowed) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
     const messages = await Message.find({ startup: id })
       .populate("sender", "name email role")
-      .sort({ createdAt: 1 }); // Oldest first (for chat history)
+      .sort({ createdAt: 1 });
 
     res.json(messages);
   } catch (error) {
@@ -317,6 +342,10 @@ export const clearStartupMessages = async (req, res) => {
     const startup = await Startup.findById(id);
     if (!startup) {
       return res.status(404).json({ message: "Startup not found" });
+    }
+    
+    if (startup.founder.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Only the founder can clear the chat" });
     }
 
     await Message.deleteMany({ startup: id });

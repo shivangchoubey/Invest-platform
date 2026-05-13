@@ -118,7 +118,10 @@ const Home = () => {
           <button onClick={handleLogout} className="text-sm font-semibold text-gray-500 hover:text-gray-800 transition">
             Log Out
           </button>
-          <button className="bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full hover:opacity-90 transition">
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full hover:opacity-90 transition"
+          >
             Profile
           </button>
         </div>

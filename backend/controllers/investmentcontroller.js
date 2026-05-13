@@ -19,6 +19,18 @@ export const investInStartup = async (req, res) => {
       return res.status(404).json({ message: "Startup not found" });
     }
 
+    if (startup.founder.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        message: "You cannot invest in your own startup",
+      });
+    }
+
+    if (startup.verificationStatus !== "APPROVED") {
+      return res.status(400).json({
+        message: "Only approved startups can receive investments",
+      });
+    }
+
     // Prevent overfunding
     if (startup.amountRaised + amount > startup.fundingGoal) {
       return res.status(400).json({
@@ -36,12 +48,7 @@ export const investInStartup = async (req, res) => {
       amount,
       equity,
     });
-    // Prevent founder investing in own startup
-    if (startup.founder.toString() === req.user._id.toString()) {
-      return res.status(400).json({
-        message: "You cannot invest in your own startup",
-      });
-    }
+
     // Update startup amountRaised
     startup.amountRaised += amount;
     await startup.save();

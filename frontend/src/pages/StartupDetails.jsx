@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../services/api";
 import { formatCurrency } from "../utils/formatters";
 
 const StartupDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [startupData, setStartupData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,7 +62,11 @@ const StartupDetails = () => {
 
       // Ensure API URL matches where the backend is hosted
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-      socketRef.current = io(API_URL);
+      const token = localStorage.getItem("token");
+      
+      socketRef.current = io(API_URL, {
+        auth: { token }
+      });
 
       socketRef.current.emit("join-room", id);
 
@@ -71,6 +76,10 @@ const StartupDetails = () => {
 
       socketRef.current.on("chat-cleared", () => {
         setMessages([]);
+      });
+
+      socketRef.current.on("error-message", (msg) => {
+        alert(msg);
       });
 
       return () => {
@@ -180,7 +189,6 @@ const StartupDetails = () => {
     
     socketRef.current.emit("send-message", {
       startupId: id,
-      senderId: user._id,
       content: newMessage,
     });
     
@@ -220,7 +228,10 @@ const StartupDetails = () => {
           >
             Back
           </Link>
-          <button className="bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full hover:opacity-90 transition">
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full hover:opacity-90 transition"
+          >
             Profile
           </button>
         </div>
@@ -466,16 +477,18 @@ const StartupDetails = () => {
                    </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleClearChat}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
-                    title="Clear Chat History"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
+                  {isFounder && (
+                    <button
+                      onClick={handleClearChat}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                      title="Clear Chat History"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  )}
                   {/* Live Indicator */}
                   <div className="flex items-center gap-1.5 px-2 py-1 bg-green-100 rounded-full">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
