@@ -31,7 +31,7 @@ const Login = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-background flex flex-col items-center justify-center font-sans tracking-tight px-4 bg-cover bg-center bg-no-repeat relative"
       style={{ backgroundImage: `url('/finance_login_bg.png')` }}
     >
@@ -55,7 +55,7 @@ const Login = () => {
           Dhanex
         </h1>
         <p className="text-[15px] font-medium text-white/80 tracking-wide drop-shadow-sm">
-          The Digital Ledger Editorial
+          A Fundrasing Platform
         </p>
       </div>
 
@@ -70,7 +70,7 @@ const Login = () => {
             Welcome back
           </h2>
           <p className="text-[14px] text-muted mb-6 font-medium">
-            Please enter your credentials to access your ledger.
+            Please enter your credentials to access your account.
           </p>
 
           {error && (
@@ -151,8 +151,8 @@ const Login = () => {
 
             {/* Button */}
             <div className="pt-4">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-primary text-white py-4 rounded-full font-bold text-[15px] hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
@@ -171,7 +171,7 @@ const Login = () => {
           {/* Footer Text */}
           <div className="text-center pt-8 pb-1">
             <p className="text-[13px] font-bold text-muted">
-              New to the ledger?{" "}
+              New to the Dhanex?{" "}
               <Link to="/register" className="text-primary hover:opacity-80 transition-opacity">
                 Request Access
               </Link>
