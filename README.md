@@ -90,13 +90,13 @@ invest-platform/
 🔌 API Endpoints Reference
 
 🔐 Authentication (/api/auth)
-
+```text
 POST /api/auth/register - Register a new user (restricted to roles FOUNDER or INVESTOR).
 POST /api/auth/login - Login user and return JWT token.
 GET /api/auth/me - Get profile of the currently logged-in user.
-
+```
 🚀 Startup Management (/api/startups)
-
+```text
 GET /api/startups - Get all approved startups (Public route with pagination & sorting).
 GET /api/startups/my - Get all startups listed by the logged-in founder.
 POST /api/startups - Create a new startup listing (Founder only).
@@ -109,40 +109,43 @@ PUT /api/startups/:id/resubmit - Resubmit a rejected or removed startup for veri
 POST /api/startups/:id/flag - Flag a startup listing (Investor only).
 GET /api/startups/:id/messages - Retrieve chat history for a startup room.
 DELETE /api/startups/:id/messages - Clear chat history of a startup room (Founder only).
-
+```
 💳 Investments (/api/invest)
-
+```text
 POST /api/invest - Invest in an approved startup (Investor only).
 GET /api/invest/my - List all investments made by the logged-in investor.
 DELETE /api/invest/:id - Cancel/delete an investment (Investor only).
-
+```
 🛡️ Admin Actions (/api/admin)
-
+```text
 GET /api/admin/pending - List all pending startup submissions (Internal admin only).
 PUT /api/admin/approve/:id - Approve a pending startup (Internal admin only).
 PUT /api/admin/reject/:id - Reject a pending startup (Internal admin only).
 GET /api/admin/flagged - List all flagged startups (Internal admin only).
 PUT /api/admin/flagged/:id/ignore - Ignore flags on a startup (Internal admin only).
 DELETE /api/admin/startups/:id - Permanently remove a flagged startup (Internal admin only).
-
+```
 💬 Live Chat WebSockets Events
 
 The application uses Socket.io for real-time discussions inside startup detail pages.
 
 Client-to-Server Events
 
+```text
 join-room (startupId) - Joins the room for the specified startup (validated against user credentials and startup verification status).
 send-message ({ startupId, content }) - Dispatches a message to the startup's discussion board.
 clear-chat (startupId) - Clears chat history of a startup (restricted to the startup's founder).
-
+```
 Server-to-Client Events
-
+```text
 receive-message (messageObject) - Broadcasts a new chat message to all connected clients in the room.
 chat-cleared - Signals clients in the room to flush the chat display.
 error-message (message) - Alerts the client in case of authorization failures or other errors.
 
+```
 ⚙️ Environment Variables
 
+```text
 Backend Configuration (backend/.env)
 
 Copy backend/.env.example to backend/.env and configure your MongoDB Atlas string:
@@ -163,10 +166,12 @@ env
 
 
 VITE_API_URL=https://invest-platform-1.onrender.com
+```
 
 🐳 Running Locally
 
 
+```text
 1. Run the Backend
 Navigate to the backend directory:
 bash
@@ -204,3 +209,4 @@ bash
 
 
 npm run dev
+```
