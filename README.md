@@ -54,7 +54,7 @@ The project includes a GitHub Actions CI/CD workflow defined in `.github/workflo
 * Frontend requests are routed to the Express.js server on Render, which connects to the cloud-hosted MongoDB Atlas cluster.
 ---
 ## 📂 Project Structure
-
+` ` ` text 
 invest-platform/
 ├── .github/
 │   └── workflows/
@@ -85,6 +85,7 @@ invest-platform/
 │   ├── nginx.conf          # Nginx server configuration for hosting React build
 │   └── Dockerfile          # Multi-stage Docker configuration (Build + Nginx serve)
 └── docker-compose.yml      # Orchestration for local development
+` ` `
 
 🔌 API Endpoints Reference
 
