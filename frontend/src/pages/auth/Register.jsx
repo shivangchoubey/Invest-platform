@@ -103,7 +103,6 @@ const Register = () => {
           >
             <option value="INVESTOR">Investor</option>
             <option value="FOUNDER">Founder</option>
-            <option value="ADMIN">Admin</option>
           </select>
         </div>
 
