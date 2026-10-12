@@ -14,7 +14,7 @@ It features real-time, role-authorized chat rooms for active discussion.
 * **Core:** Node.js, Express.js
 * **Database:** MongoDB Atlas (Cloud Database via Mongoose ODM)
 * **Real-time Communication:** Socket.io Server
-* **Security & Auth:** JSON Web Tokens (JWT), Bcrypt & BcryptJS (Password Hashing)
+* **Security & Auth:** JSON Web Tokens (JWT), Bcrypt & BcryptJS (Password Hashing), Password Policy & Complexity Validation (Length >= 8, Mixed Case, Numbers, Symbols, Common Passwords Blacklist)
 * **Validation:** Zod (Request schema validation)
 ### CI/CD & Deployment
 * **CI/CD Pipeline:** GitHub Actions
